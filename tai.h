@@ -33,3 +33,8 @@ typedef struct {
 tai_t tai_now();
 tain_t tain_now();
 tai_t tai_mktime(struct tm* date);
+tain_t tain_mktime(struct tm* date, uint32_t ns);
+uint64_t tai_tobytes(tai_t time);
+tai_t tai_frombytes(uint64_t time);
+tain_t tain_tobytes(tain_t time);
+tain_t tain_frombytes(tain_t time);
