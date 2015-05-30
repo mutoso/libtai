@@ -227,7 +227,7 @@ tain_t tain_tobytes(tain_t time)
 {
     tain_t ret;
     ret.sec = htonll(time.sec);
-    ret.sec = htonl(time.ns);
+    ret.ns = htonl(time.ns);
 
     return ret;
 }
@@ -236,7 +236,7 @@ tain_t tain_frombytes(tain_t time)
 {
     tain_t ret;
     ret.sec = ntohll(time.sec);
-    ret.sec = ntohl(time.ns);
+    ret.ns = ntohl(time.ns);
 
     return ret;
 }
