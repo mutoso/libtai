@@ -3,7 +3,7 @@
 
 #include "tai.h"
 
-unsigned int leapsecsat(time_t date)
+unsigned int leapsecsat_unix(time_t date)
 {
     #define TABLE_LEN 27
     time_t leapsec_dates[TABLE_LEN] = { 0 };
@@ -52,10 +52,59 @@ unsigned int leapsecsat(time_t date)
     return leapsec_diff[0];
 }
 
+unsigned int leapsecsat_tai(tai_t date)
+{
+    #define TABLE_LEN 27
+    time_t leapsec_dates[TABLE_LEN] = { 0 };
+    uint8_t leapsec_diff[TABLE_LEN] = { 0 };
+
+    #define new_leapsec(i, date, diff) leapsec_dates[i] = date; leapsec_diff[i] = diff;
+    new_leapsec(0, 63072010, 10);
+    new_leapsec(1, 78796811, 11);
+    new_leapsec(2, 94694412, 12);
+    new_leapsec(3, 126230413, 13);
+    new_leapsec(4, 157766414, 14);
+    new_leapsec(5, 189302415, 15);
+    new_leapsec(6, 220924816, 16);
+    new_leapsec(7, 252460817, 17);
+    new_leapsec(8, 283996818, 18);
+    new_leapsec(9, 315532819, 19);
+    new_leapsec(10, 362793620, 20);
+    new_leapsec(11, 394329621, 21);
+    new_leapsec(12, 425865622, 22);
+    new_leapsec(13, 489024023, 23);
+    new_leapsec(14, 567993624, 24);
+    new_leapsec(15, 631152025, 25);
+    new_leapsec(16, 662688026, 26);
+    new_leapsec(17, 709948827, 27);
+    new_leapsec(18, 741484828, 28);
+    new_leapsec(19, 773020829, 29);
+    new_leapsec(20, 820454430, 30);
+    new_leapsec(21, 867715231, 31);
+    new_leapsec(22, 915148832, 32);
+    new_leapsec(23, 1136073633, 33);
+    new_leapsec(24, 1230768034, 34);
+    new_leapsec(25, 1341100835, 35);
+    new_leapsec(26, 1435708836, 36);
+    #undef new_leapsec
+
+    // go backwards since it's more likely that people will be using modern dates
+    for (int i = TABLE_LEN - 1; i >= 0; i--)
+    {
+        if (leapsec_dates[i] - date <= 0)
+        {
+            return leapsec_diff[i];
+        }
+    }
+    #undef TABLE_LEN
+    // some date before the first leap seconds were inserted
+    return leapsec_diff[0];
+}
+
 tai_t tai_now()
 {
     time_t now = time(NULL);
-    return now + leapsecsat(now);
+    return now + leapsecsat_unix(now);
 }
 
 tain_t tain_now()
@@ -80,7 +129,7 @@ tain_t tain_now()
 #endif
 
     // factor in leap seconds
-    now.sec += leapsecsat(now.sec);
+    now.sec += leapsecsat_unix(now.sec);
 
     return now;
 }
@@ -118,20 +167,31 @@ tai_t tai_mktime(struct tm* date)
         #	...
         (from https://www.ietf.org/timezones/data/leap-seconds.list)
         */
+
         // use the second before so that you end up with the same base time
         date->tm_sec--;
         time_t base_time = timegm(date);
         // set date back to actual date
         date->tm_sec++;
         // then get the leap second at 23:59:60 by asking for leapsecs at 00:00:00
-        uint8_t leapsecs = leapsecsat(base_time + 1);
+        uint8_t leapsecs = leapsecsat_unix(base_time + 1);
 
         return base_time + leapsecs;
     }
 
     // if not a leap second
     time_t unix_time = timegm(date);
-    return unix_time + leapsecsat(unix_time);
+    return unix_time + leapsecsat_unix(unix_time);
+}
+
+struct tm* tai_utctime(tai_t time)
+{
+    struct tm* utc = gmtime(&time);
+    utc->tm_sec -= leapsecsat_tai(time);
+    // normalize
+    mktime(utc);
+
+    return utc;
 }
 
 tain_t tain_mktime(struct tm* date, uint32_t ns)
