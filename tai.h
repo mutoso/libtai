@@ -1,6 +1,9 @@
 /* (c) 2015 Alastair Feille
    MIT License */
 
+#ifndef TAI_H
+#define TAI_H
+
 #include <stdint.h>
 #include <stdlib.h>
 #include <time.h>
@@ -38,3 +41,5 @@ uint64_t tai_tobytes(tai_t time);
 tai_t tai_frombytes(uint64_t time);
 tain_t tain_tobytes(tain_t time);
 tain_t tain_frombytes(tain_t time);
+
+#endif
