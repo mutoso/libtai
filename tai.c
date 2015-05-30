@@ -194,6 +194,16 @@ struct tm* tai_utctime(tai_t time)
     return utc;
 }
 
+struct tm* tai_localtime(tai_t time)
+{
+    struct tm* local = localtime(&time);
+    local->tm_sec -= leapsecsat_tai(time);
+    // normalize
+    mktime(local);
+
+    return local;
+}
+
 tain_t tain_mktime(struct tm* date, uint32_t ns)
 {
     tain_t ret;
