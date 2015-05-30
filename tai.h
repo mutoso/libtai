@@ -9,7 +9,7 @@
 #include <time.h>
 
 #ifdef _WIN32
-    // You have to have WinSock2 before windows.h or you compiler errors (https://stackoverflow.com/questions/11726958/cant-include-winsock2-h-in-msvc-2010)
+    // You have to have WinSock2 before windows.h or you get compiler errors (https://stackoverflow.com/questions/11726958/cant-include-winsock2-h-in-msvc-2010)
     #include <WinSock2.h>
     #include <windows.h>
 
