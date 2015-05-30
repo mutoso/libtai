@@ -134,7 +134,7 @@ tai_t tai_mktime(struct tm* date)
     return unix_time + leapsecsat(unix_time);
 }
 
-tain_t tain_fromdate(struct tm* date, uint32_t ns)
+tain_t tain_mktime(struct tm* date, uint32_t ns)
 {
     tain_t ret;
     ret.sec = tai_mktime(date);
