@@ -101,6 +101,55 @@ unsigned int leapsecsat_tai(tai_t date)
     return leapsec_diff[0];
 }
 
+bool isleapsec_tai(tai_t date)
+{
+    #define TABLE_LEN 27
+    time_t leapsec_dates[TABLE_LEN] = { 0 };
+    uint8_t leapsec_diff[TABLE_LEN] = { 0 };
+
+    #define new_leapsec(i, date, diff) leapsec_dates[i] = date; leapsec_diff[i] = diff;
+    new_leapsec(0, 63072009, 10);
+    new_leapsec(1, 78796810, 11);
+    new_leapsec(2, 94694411, 12);
+    new_leapsec(3, 126230412, 13);
+    new_leapsec(4, 157766413, 14);
+    new_leapsec(5, 189302414, 15);
+    new_leapsec(6, 220924815, 16);
+    new_leapsec(7, 252460816, 17);
+    new_leapsec(8, 283996817, 18);
+    new_leapsec(9, 315532818, 19);
+    new_leapsec(10, 362793619, 20);
+    new_leapsec(11, 394329620, 21);
+    new_leapsec(12, 425865621, 22);
+    new_leapsec(13, 489024022, 23);
+    new_leapsec(14, 567993623, 24);
+    new_leapsec(15, 631152024, 25);
+    new_leapsec(16, 662688025, 26);
+    new_leapsec(17, 709948826, 27);
+    new_leapsec(18, 741484827, 28);
+    new_leapsec(19, 773020828, 29);
+    new_leapsec(20, 820454429, 30);
+    new_leapsec(21, 867715230, 31);
+    new_leapsec(22, 915148831, 32);
+    new_leapsec(23, 1136073632, 33);
+    new_leapsec(24, 1230768033, 34);
+    new_leapsec(25, 1341100834, 35);
+    new_leapsec(26, 1435708835, 36);
+    #undef new_leapsec
+
+    // go backwards since it's more likely that people will be using modern dates
+    for (int i = TABLE_LEN - 1; i >= 0; i--)
+    {
+        if (leapsec_dates[i] == date)
+        {
+            return true;
+        }
+    }
+    #undef TABLE_LEN
+    // not a leap second
+    return false;
+}
+
 tai_t tai_now()
 {
     time_t now = time(NULL);
@@ -187,7 +236,29 @@ tai_t tai_mktime(struct tm* date)
 struct tm* tai_utctime(tai_t time)
 {
     struct tm* utc = gmtime(&time);
+
+    if (isleapsec_tai(time))
+    {
+        utc->tm_mday--;
+        mktime(utc);
+
+        utc->tm_hour = 23;
+        utc->tm_min  = 59;
+        utc->tm_sec  = 60;
+
+        return utc;
+    }
+    // run mktime to set tm_isdst flag
+    mktime(utc);
+
+    // adjust for leap seconds
     utc->tm_sec -= leapsecsat_tai(time);
+
+    // UTC time is off by an hour if the DST flag is set (for some reason)
+    if (utc->tm_isdst != 0)
+    {
+        utc->tm_hour--;
+    }
     // normalize
     mktime(utc);
 

@@ -19,8 +19,14 @@
     #pragma comment (lib, "AdvApi32.lib")
 
     #define timegm _mkgmtime
+
+    // MSVC doesn't have stdbool.h
+    typedef int bool;
+    #define false 0
+    #define true 1
 #else
     #include <arpa/inet.h>
+    #include <stdbool.h>
 #endif
 
 #define htonll(x) ((1==htonl(1)) ? (x) : ((uint64_t)htonl((x) & 0xFFFFFFFF) << 32) | htonl((x) >> 32))
